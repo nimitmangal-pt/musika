@@ -1,0 +1,6 @@
+doctype html
+html
+  head
+    title MediaManager
+  body
+    block content
