@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strconv"
 
 	"github.com/gorilla/websocket"
 )
@@ -111,6 +112,15 @@ func (c *Client) readPump() {
 				AddToQueue(media.FileName)
 				StartPlayer(-1)
 				data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
+			case "start player":
+				StartPlayer(-1)
+				data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
+			case "next":
+				Next()
+				data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
+			case "prev":
+				Previous()
+				data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
 			case "toggle pause":
 				TogglePause()
 				data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
@@ -120,6 +130,10 @@ func (c *Client) readPump() {
             case "set repeat":
                 Repeat(int(socketData.Data.(float64)))
                 data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
+			case "play queued song":
+				pos, _ := strconv.Atoi(socketData.Data.(string))
+				StartPlayer(pos)
+				data, _ = json.Marshal(SocketData{Action: "update ui", Data: UpdateUi()})
 		}
         if broadcast {
             c.hub.broadcast <- data

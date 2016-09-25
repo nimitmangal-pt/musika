@@ -210,6 +210,15 @@ func StopPlayer() {
 	conn.Stop()
 }
 
+func Next() {
+	err := conn.Next()
+	log.Println(err);
+}
+
+func Previous() {
+	conn.Previous()
+}
+
 func StartPlayer(pos int) {
 	conn.Play(pos)
 }
@@ -218,6 +227,8 @@ func TogglePause() {
 	status := GetStatus()
 	if status["state"] == "play" {
 		conn.Pause(true)
+	} else if status["state"] == "stop" {
+		StartPlayer(-1)
 	} else {
 		conn.Pause(false)
 	}
@@ -329,7 +340,7 @@ func coverArtHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		f, err := os.Open(*rootDir + "audio/" + r.FormValue("file"))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		m, err := tag.ReadFrom(f)
