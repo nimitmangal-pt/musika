@@ -56,10 +56,10 @@ func isAudioOrVideo(path string) (_ string) {
 	defer info.Close()
 
 	// Find a video stream. If one is found, we are dealing with a video.
-	format, err := info.Get("Format", 0, mediainfo.Video)
+	_, err = info.Get("Format", 0, mediainfo.Video)
 	if err != nil {
 		// not a video!
-		_, err = info.Get("Format", 0, mediainfo.Audio)
+		format, err := info.Get("Format", 0, mediainfo.Audio)
 		if err != nil {
 			// not an audio either!
 			return ""
