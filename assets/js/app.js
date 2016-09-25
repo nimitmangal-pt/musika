@@ -126,60 +126,60 @@ $(function() {
         }
         return result;
     }
+});
 
-    function Socket(address) {
-        this.address = (address || document.location.host);
-        var ws;
-        var self = this;
-        function connect() {
-            ws = new WebSocket("ws://" + self.address + "/ws");
-        }
-        connect();
-        var messages = [];
-        this.ready = false;
-        ws.onopen = function() {
-            self.ready = true;
-            console.log("open fired " + ws.readyState);
-            runHandlersFor('connection');
-            if(messages.length > 0) {
-                messages.forEach(function(message) {
-                    self.emit(message.Action, message.Data);
-                });
-            }
-        }
-        ws.onmessage = function(evt) {
-            evt = JSON.parse(evt.data);
-            if(eventHandlers[evt.Action]) {
-                runHandlersFor(evt.Action, evt.Data);
-            }
-        }
-        ws.onerror = function() {
-            self.ready = false;
-            ws.close()
-        }
-        ws.onclose = function() {
-            self.ready = false;
-            runHandlersFor('disconnect');
-        }
-        this.emit = function(event, data) {
-            var message = {Action: event, Data: data};
-            if(self.ready) {
-                console.log("reported to be ready " + ws.readyState);
-                ws.send(JSON.stringify(message));
-            } else {
-                messages.push(message);
-                connect();
-            }
-        };
-        var eventHandlers = []
-        this.on = function(eventName, cb) {
-            eventHandlers[eventName] = eventHandlers[eventName] || [];
-            eventHandlers[eventName].push(cb);
-        }
-        function runHandlersFor(eventName, data) {
-            eventHandlers[eventName].forEach(function(cb) {
-                cb(data);
-            })
+function Socket(address) {
+    this.address = (address || document.location.host);
+    var ws;
+    var self = this;
+    function connect() {
+        ws = new WebSocket("ws://" + self.address + "/ws");
+    }
+    connect();
+    var messages = [];
+    this.ready = false;
+    ws.onopen = function() {
+        self.ready = true;
+        console.log("open fired " + ws.readyState);
+        runHandlersFor('connection');
+        if(messages.length > 0) {
+            messages.forEach(function(message) {
+                self.emit(message.Action, message.Data);
+            });
         }
     }
-});
+    ws.onmessage = function(evt) {
+        evt = JSON.parse(evt.data);
+        if(eventHandlers[evt.Action]) {
+            runHandlersFor(evt.Action, evt.Data);
+        }
+    }
+    ws.onerror = function() {
+        self.ready = false;
+        ws.close()
+    }
+    ws.onclose = function() {
+        self.ready = false;
+        runHandlersFor('disconnect');
+    }
+    this.emit = function(event, data) {
+        var message = {Action: event, Data: data};
+        if(self.ready) {
+            console.log("reported to be ready " + ws.readyState);
+            ws.send(JSON.stringify(message));
+        } else {
+            messages.push(message);
+            connect();
+        }
+    };
+    var eventHandlers = []
+    this.on = function(eventName, cb) {
+        eventHandlers[eventName] = eventHandlers[eventName] || [];
+        eventHandlers[eventName].push(cb);
+    }
+    function runHandlersFor(eventName, data) {
+        eventHandlers[eventName].forEach(function(cb) {
+            cb(data);
+        })
+    }
+}
