@@ -1,9 +1,13 @@
+var socket = new Socket();
+socket.on('connection', function() {
+    socket.emit('update ui');
+});
+
 $(function() {
     $('a[href="#library"]').on('shown.bs.tab', function (e) {
         console.log('amit')
         socket.emit("list media");
     })
-
 
     var vol = $('.volume-filler').parent().on('click', function(e) {
         var volume = Math.ceil((100 * e.offsetX)/$(this).width());
@@ -26,10 +30,7 @@ $(function() {
     $('.icon-control-forward').parent().click(function() {
         socket.emit('next');
     }).end();
-    var socket = new Socket();
-    socket.on('connection', function() {
-        socket.emit('update ui');
-    });
+    
     // slider.noUiSlider.on('change', function(){
     //     socket.emit('set volume', parseInt(slider.noUiSlider.get()));
     // });
