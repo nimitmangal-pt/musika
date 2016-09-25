@@ -297,7 +297,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			if av == "audio" || av == "video" {
 				// is this file already present? check that with checksum!
 				checksum, err := ComputeMd5(path)
-				newpath := *rootDir + av + "/" + checksum
+				newpath := *rootDir + av + "/" + checksum + ".mp3"
 				if err != nil {
 					log.Println("d")
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -305,6 +305,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				}
 
 				os.Rename(path, newpath)
+				os.Chmod(newpath, 0777)
 
 				if av == "audio" {
 					if err := db.Create(&Media{OriginalName: files[i].Filename, FileName: newpath, AV: 0}).Error; err != nil {
@@ -316,7 +317,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
-					conn.Update(newpath)
+					conn.Update("/")
 				} else {
 					db.Create(Media{OriginalName: files[i].Filename, FileName: newpath, AV: 1})
 				}
@@ -429,6 +430,7 @@ func main() {
 	var webPort = flag.String("w", ":3000", "Web ip and port to listen on. or just :<port>")
 
 	rootDir = flag.String("d", "/Users/amit/content/", "Host for MPD")
+	flag.Parse()
 
 	conn, err = mpd.Dial("tcp", *mpdHost+":"+*mpdPort)
 	if err != nil {
