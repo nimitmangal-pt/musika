@@ -342,7 +342,9 @@ func queueHandler(w http.ResponseWriter, r *http.Request) {
 
 func coverArtHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		f, err := os.Open(*rootDir + "audio/" + r.FormValue("file"))
+		media := &Media{}
+		db.Where("OriginalName = ?", r.FormValue("file")).First(&media)
+		f, err := os.Open(*rootDir + "audio/" + media.FileName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
