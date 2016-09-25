@@ -14,7 +14,6 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/dwbuiten/go-mediainfo/mediainfo"
-	"github.com/eknkc/amber"
 	"github.com/fhs/gompd/mpd"
 	"github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -42,17 +41,11 @@ var conn *mpd.Client
 
 var db *gorm.DB
 
-var templates, err = amber.CompileDir("views/", amber.DefaultDirOptions, amber.DefaultOptions)
-
 var rootDir *string
 
 const DEBUG = true
 
 var currentPlaylist Playlist
-
-func display(w http.ResponseWriter, tmpl string, data interface{}) {
-	templates[tmpl].Execute(w, data)
-}
 
 func isAudioOrVideo(path string) (_ string) {
 	info, err := mediainfo.Open(path)
@@ -260,8 +253,6 @@ func SetVolume(vol int) bool {
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
-		display(w, "player/music", nil)
 	case "POST":
 		err := r.ParseMultipartForm(100000)
 		if err != nil {
@@ -321,7 +312,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			// remove the tmp
 			os.Remove(path)
 		}
-		display(w, "player/music", "Upload successful.")
+		w.WriteHeader(http.StatusOK)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

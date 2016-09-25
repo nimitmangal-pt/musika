@@ -81,8 +81,6 @@ $(function() {
         tags.forEach(function(tag) {
             tag.update({items: data.queue})
         });
-
-        console.log(tags[0])
         
         // if(data.queue) {
         //     if(queueContainer.find('.song').not('.hide').length() > )
