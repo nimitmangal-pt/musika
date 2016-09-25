@@ -50,18 +50,22 @@ var currentPlaylist Playlist
 func isAudioOrVideo(path string) (_ string) {
 	info, err := mediainfo.Open(path)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 		return ""
 	}
 	defer info.Close()
 
 	// Find a video stream. If one is found, we are dealing with a video.
-	_, err = info.Get("Format", 0, mediainfo.Video)
+	format, err := info.Get("Format", 0, mediainfo.Video)
 	if err != nil {
 		// not a video!
 		_, err = info.Get("Format", 0, mediainfo.Audio)
 		if err != nil {
 			// not an audio either!
+			return ""
+		}
+		// is it an MPEG Audio? If not, we don't allow it!
+		if format != "MPEG Audio" {
 			return ""
 		}
 		return "audio"
@@ -136,13 +140,14 @@ func GetCurrentSong() (mpd.Attrs){
 	return attrs
 }
 
-func GetAllMedia(aOrV int) (media []Media) {
-	if aOrV < 0 {
-		db.Find(&media)
-	} else {
-		db.Where("AV = ?", aOrV).Find(&media)
-	}
-	return
+func GetAllMedia(aOrV int) ([]mpd.Attrs) {
+	// if aOrV < 0 {
+	// 	db.Find(&media)
+	// } else {
+	// 	db.Where("AV = ?", aOrV).Find(&media)
+	// }
+	attrs, _ := conn.ListAllInfo("/")
+	return attrs
 }
 
 func GetPlaylists() (playlists []Playlist) {
@@ -256,6 +261,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		err := r.ParseMultipartForm(100000)
 		if err != nil {
+			log.Println("0")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -267,6 +273,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			file, err := files[i].Open()
 			defer file.Close()
 			if err != nil {
+				log.Println("a")
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -275,11 +282,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			dst, err := os.Create(path)
 			defer dst.Close()
 			if err != nil {
+				log.Println("b")
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			if _, err := io.Copy(dst, file); err != nil {
+				log.Println("c")
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -290,6 +299,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				checksum, err := ComputeMd5(path)
 				newpath := *rootDir + av + "/" + checksum
 				if err != nil {
+					log.Println("d")
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
@@ -297,14 +307,16 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				os.Rename(path, newpath)
 
 				if av == "audio" {
+					if err := db.Create(&Media{OriginalName: files[i].Filename, FileName: newpath, AV: 0}).Error; err != nil {
+    					log.Println(err)
+					}
 					cmdArgs := []string{"waveform.sh"}
 					if _, err = exec.Command("sh", cmdArgs...).Output(); err != nil {
+						log.Println("e")
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
 					conn.Update(newpath)
-
-					db.Create(Media{OriginalName: files[i].Filename, FileName: newpath, AV: 0})
 				} else {
 					db.Create(Media{OriginalName: files[i].Filename, FileName: newpath, AV: 1})
 				}
@@ -312,7 +324,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			// remove the tmp
 			os.Remove(path)
 		}
-		w.WriteHeader(http.StatusOK)
+		http.Redirect(w, r, "/", http.StatusFound)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

@@ -9,6 +9,7 @@
 		<script src="/js/jquery.js"></script>
 		<script src="/js/riot.js"></script>
 		<script src="/js/nowplaying.tag" type="riot/tag"></script>
+		<script src="/js/library.tag" type="riot/tag"></script>
 		<script src="/js/bootstrap.js"></script>
 		<script src="/js/app.js"></script>
 	</head>
@@ -47,10 +48,37 @@
 		</nav>
 		<div class="container-fluid">
 			<div class="tab-content">
-				<nowplaying></nowplaying>
-				<!--<script>riot.mount('nowplaying')</script>-->
+				<div role="tabpanel" class="tab-pane active" id="nowplaying">
+					<nowplaying></nowplaying>
+				</div>
+				<script>riot.mount('nowplaying')</script>
 				<div role="tabpanel" class="tab-pane" id="playlists">...</div>
-				<div role="tabpanel" class="tab-pane" id="library">...</div>
+				<div role="tabpanel" class="tab-pane" id="library">
+					<library></library>
+				</div>
+				<script>riot.mount('library')</script>
+			</div>
+			<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<form action="/upload" method="post" enctype="multipart/form-data">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title" id="uploadModalLabel">Add your files</h4>
+							</div>
+							<div class="modal-body">
+								<div class="form-group">
+									<label for="fileInput">Files</label>
+									<input type="file" class="form-control" id="fileInput" placeholder="Your files" multiple="multiple" name="files">
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+								<input type="submit" class="btn btn-primary" value="Upload"></button>
+							</div>
+						</form>
+					</div>
+				</div>
 			</div>
 		</div>
 		<footer class="footer">

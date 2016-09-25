@@ -1,4 +1,10 @@
 $(function() {
+    $('a[href="#library"]').on('shown.bs.tab', function (e) {
+        console.log('amit')
+        socket.emit("list media");
+    })
+
+
     var vol = $('.volume-filler').parent().on('click', function(e) {
         var volume = Math.ceil((100 * e.offsetX)/$(this).width());
         socket.emit('set volume', volume);
@@ -42,6 +48,14 @@ $(function() {
 
     var queueContainer = $('#nowplaying').find('.row')
     var songEntry = queueContainer.find('.song.hide')
+
+    socket.on("media list", function(data) {
+        console.log(data);
+        var libraries = riot.mount('library');
+        libraries.forEach(function(library){
+            library.update({items: data});
+        });
+    });
     
     socket.on("update ui", function(data) {
         console.log(data);
@@ -124,10 +138,11 @@ $(function() {
         this.ready = false;
         ws.onopen = function() {
             self.ready = true;
+            console.log("open fired " + ws.readyState);
             runHandlersFor('connection');
             if(messages.length > 0) {
                 messages.forEach(function(message) {
-                    self.send(message.Action, message.Data);
+                    self.emit(message.Action, message.Data);
                 });
             }
         }
@@ -137,6 +152,10 @@ $(function() {
                 runHandlersFor(evt.Action, evt.Data);
             }
         }
+        ws.onerror = function() {
+            self.ready = false;
+            ws.close()
+        }
         ws.onclose = function() {
             self.ready = false;
             runHandlersFor('disconnect');
@@ -144,6 +163,7 @@ $(function() {
         this.emit = function(event, data) {
             var message = {Action: event, Data: data};
             if(self.ready) {
+                console.log("reported to be ready " + ws.readyState);
                 ws.send(JSON.stringify(message));
             } else {
                 messages.push(message);

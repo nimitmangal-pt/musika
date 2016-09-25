@@ -2,7 +2,7 @@
 
 # script to update waveforms of any files that have no waveform generated yet!
 
-LIST=`sqlite3 metadata.db "SELECT FileName FROM media where AV = 0"`;
+LIST=`sqlite3 metadata.db "SELECT file_name FROM media where AV = 0"`;
 
 convert -size 660X60 canvas:#4d5d6e background.png
 
